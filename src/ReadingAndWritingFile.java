@@ -7,16 +7,20 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-public class ReadingAndWritingFile extends UserInput {
+public class ReadingAndWritingFile extends UserFileInput {
 
-    private List<String> file = new LinkedList<>();
-    private List<String> validFile = new LinkedList<>();
+    private List<String> listDocuments = new LinkedList<>();
+    private List<String> validDocuments = new LinkedList<>();
 
-    private List<String> noValidFile = new LinkedList<>();
+    private List<String> noValidDocuments = new LinkedList<>();
+    private boolean isRead = false;
+    private boolean isAnalyze = false;
 
-    protected List<String> readingFile() {
+    private void readFile() {
 
-        try (FileInputStream nameFile = new FileInputStream(thePathToTheFile())) {
+        readPathToTheFile();
+
+        try (FileInputStream nameFile = new FileInputStream(new String(getSourceFile()))) {
 
             String text = "";
             String[] result;
@@ -26,7 +30,10 @@ public class ReadingAndWritingFile extends UserInput {
                 text = text + (char) i;
             }
             result = text.split("\r\n");
-            file = Arrays.asList(result);
+            listDocuments = Arrays.asList(result);
+
+            displayInfo();
+            isRead = true;
 
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
@@ -34,27 +41,50 @@ public class ReadingAndWritingFile extends UserInput {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return file;
     }
 
-    protected void sortingFile() {
-        for (String number : this.file) {
+    protected List<String> getListDocuments() {
+        return listDocuments;
+    }
+
+    protected List<String> getValidDocuments() {
+        if (!isAnalyze) {
+            analyzeFile();
+        }
+        validDocumentsInfo();
+        return validDocuments;
+    }
+
+    protected List<String> getNoValidDocuments() {
+        if (!isAnalyze) {
+            analyzeFile();
+        }
+        noValidDocumentsInfo();
+        return noValidDocuments;
+    }
+
+    private void analyzeFile() {
+        if (!isRead) {
+            readFile();
+        }
+        for (String number : this.listDocuments) {
             if (!((number.startsWith("docnum") && number.length() == 15) ||
                     (number.startsWith("contract") && number.length() == 15))) {
-                noValidFile.add(number);
+                noValidDocuments.add(number);
             } else {
-                validFile.add(number);
+                validDocuments.add(number);
             }
         }
+        isAnalyze = true;
     }
 
-    protected void writingValidFile() {
+    protected void writingValidDocuments() {
 
         FileOutputStream outputValidFile = null;
 
         try {
             outputValidFile = new FileOutputStream("D:/Document valid file.txt");
-            outputValidFile.write(validFile.toString().getBytes());
+            outputValidFile.write(validDocuments.toString().getBytes());
 
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
@@ -69,7 +99,7 @@ public class ReadingAndWritingFile extends UserInput {
         }
     }
 
-    protected void writingNoValidFile() {
+    protected void writingNoValidDocuments() {
 
         FileOutputStream outputNoValidFile = null;
 
@@ -77,30 +107,30 @@ public class ReadingAndWritingFile extends UserInput {
             outputNoValidFile = new FileOutputStream("D:/Document novalid file.txt");
 
             int index = 0;
-            for (String number : this.noValidFile) {
-                if ((number.length() != 15)&&!(number.startsWith("docnum") || number.startsWith("contract"))) {
+            for (String number : this.noValidDocuments) {
+                if ((number.length() != 15) && !(number.startsWith("docnum") || number.startsWith("contract"))) {
                     StringBuilder result = new StringBuilder("");
                     result.append(number).append(" -файл не начинается с последовательности docnum или contract и " +
                             "длина файла не равна 15 символам;");
                     result.append("\n");
                     String resultFinal = result.toString();
-                    noValidFile.set(index, resultFinal);
-                } else if (!(number.startsWith("docnum") || number.startsWith("contract"))&&(number.length() == 15)) {
+                    noValidDocuments.set(index, resultFinal);
+                } else if (!(number.startsWith("docnum") || number.startsWith("contract")) && (number.length() == 15)) {
                     StringBuilder result = new StringBuilder("");
                     result.append(number).append(" -файл не начинается с последовательности docnum или contract;");
                     result.append("\n");
                     String resultFinal = result.toString();
-                    noValidFile.set(index, resultFinal);
+                    noValidDocuments.set(index, resultFinal);
                 } else {
                     StringBuilder result = new StringBuilder("");
                     result.append(number).append(" -длина файла не равна 15 символам;");
                     result.append("\n");
                     String resultFinal = result.toString();
-                    noValidFile.set(index, resultFinal);
+                    noValidDocuments.set(index, resultFinal);
                 }
                 index++;
             }
-            outputNoValidFile.write(noValidFile.toString().getBytes());
+            outputNoValidFile.write(noValidDocuments.toString().getBytes());
 
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
@@ -115,17 +145,17 @@ public class ReadingAndWritingFile extends UserInput {
         }
     }
 
-    public void displayInfo() {
-        System.out.println(file);
+    private void displayInfo() {
+        System.out.println(listDocuments);
     }
 
-    public void noValidFileInfo() {
-        System.out.println(noValidFile);
+    private void noValidDocumentsInfo() {
+        System.out.println(noValidDocuments);
 
     }
 
-    public void validFileInfo() {
-        System.out.println(validFile);
+    private void validDocumentsInfo() {
+        System.out.println(validDocuments);
     }
 
 }
